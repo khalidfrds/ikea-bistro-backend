@@ -2,14 +2,6 @@
  * server/src/routes/orders.ts — Order API routes
  * Phase: PH3-ENHANCED
  * Source: Domain Contract v3.0 §4.1, §4.3, §4.4
- * POST /api/orders                        — create order (requires telegramUserId + storeId)
- * GET  /api/orders/:id                    — get order status
- * GET  /api/orders/history/:telegramUserId — last N orders (Phase 3)
- * POST /api/orders/:id/ready              — mark order ready (triggers push)
- *
- * CRITICAL HOTFIX (Phase 2, preserved):
- * Payment confirmation only via Stripe/Swish webhook (server-to-server).
- * No client-facing confirm endpoint.
  */
 
 import { Router } from 'express';
@@ -19,18 +11,13 @@ import { createOrder, getOrderStatus, getUserOrderHistory, markOrderReady } from
 
 const router = Router();
 
-/** Helper: safely extract a single string from req.query or req.params value */
-function str(val: string | string[] | undefined): string | undefined {
-  if (Array.isArray(val)) return val[0];
-  return val;
-}
-
 /** GET /api/orders/history/:telegramUserId — order history (Phase 3) */
 router.get('/history/:telegramUserId', (req: Request, res: Response) => {
   try {
-    const { telegramUserId } = req.params;
-    const limitParam = typeof req.query['limit'] === 'string' ? req.query['limit'] : undefined;
-    const limit = limitParam ? Math.min(parseInt(limitParam, 10) || 10, 50) : 10;
+    const telegramUserId = String(req.params['telegramUserId'] ?? '');
+    const rawLimit = req.query['limit'];
+    const limitStr = typeof rawLimit === 'string' ? rawLimit : '10';
+    const limit = Math.min(parseInt(limitStr, 10) || 10, 50);
 
     const entries = getUserOrderHistory(telegramUserId, limit);
     res.json({ entries });
@@ -90,7 +77,7 @@ router.post('/', async (req: Request, res: Response) => {
 /** GET /api/orders/:id — Get order status */
 router.get('/:id', (req: Request, res: Response) => {
   try {
-    const orderId = str(req.params['id']) ?? '';
+    const orderId = String(req.params['id'] ?? '');
     const result = getOrderStatus(orderId);
 
     if (!result) {
@@ -109,7 +96,7 @@ router.get('/:id', (req: Request, res: Response) => {
 /** POST /api/orders/:id/ready — mark order ready (triggers push notification) */
 router.post('/:id/ready', async (req: Request, res: Response) => {
   try {
-    const orderId = str(req.params['id']) ?? '';
+    const orderId = String(req.params['id'] ?? '');
     const order = await markOrderReady(orderId);
 
     if (!order) {
