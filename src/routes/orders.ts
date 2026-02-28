@@ -29,7 +29,7 @@ function str(val: string | string[] | undefined): string | undefined {
 router.get('/history/:telegramUserId', (req: Request, res: Response) => {
   try {
     const { telegramUserId } = req.params;
-    const limitParam = str(req.query['limit'] as string | string[] | undefined);
+    const limitParam = typeof req.query['limit'] === 'string' ? req.query['limit'] : undefined;
     const limit = limitParam ? Math.min(parseInt(limitParam, 10) || 10, 50) : 10;
 
     const entries = getUserOrderHistory(telegramUserId, limit);
