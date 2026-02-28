@@ -56,9 +56,9 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', phase: 'PH3-ENHANCED', timestamp: new Date().toISOString() });
 });
 
-/** Start server */
-app.listen(PORT, () => {
-  console.log(`IKEA Bistro TMA Server running on http://localhost:${PORT}`);
+/** Start server — bind to 0.0.0.0 for Railway/Docker compatibility */
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`IKEA Bistro TMA Server running on http://0.0.0.0:${PORT}`);
   console.log(`Frontend URL: ${FRONTEND_URL}`);
   console.log(`Phase: PH3-ENHANCED`);
 });
