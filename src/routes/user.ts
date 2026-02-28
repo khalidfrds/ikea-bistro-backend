@@ -13,10 +13,16 @@ import type { SetUserContextRequest } from '../types.js';
 
 const router = Router();
 
+/** Helper: safely extract a single string from req.params value */
+function str(val: string | string[] | undefined): string | undefined {
+  if (Array.isArray(val)) return val[0];
+  return val;
+}
+
 /** GET /api/user/context/:telegramUserId */
 router.get('/context/:telegramUserId', (req: Request, res: Response) => {
   try {
-    const { telegramUserId } = req.params;
+    const telegramUserId = str(req.params['telegramUserId']);
     if (!telegramUserId) {
       res.status(400).json({ error: 'telegramUserId is required' });
       return;

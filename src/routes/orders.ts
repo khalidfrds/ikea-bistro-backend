@@ -19,11 +19,17 @@ import { createOrder, getOrderStatus, getUserOrderHistory, markOrderReady } from
 
 const router = Router();
 
+/** Helper: safely extract a single string from req.query or req.params value */
+function str(val: string | string[] | undefined): string | undefined {
+  if (Array.isArray(val)) return val[0];
+  return val;
+}
+
 /** GET /api/orders/history/:telegramUserId — order history (Phase 3) */
 router.get('/history/:telegramUserId', (req: Request, res: Response) => {
   try {
     const { telegramUserId } = req.params;
-    const limitParam = req.query['limit'] as string | undefined;
+    const limitParam = str(req.query['limit'] as string | string[] | undefined);
     const limit = limitParam ? Math.min(parseInt(limitParam, 10) || 10, 50) : 10;
 
     const entries = getUserOrderHistory(telegramUserId, limit);
@@ -84,7 +90,7 @@ router.post('/', async (req: Request, res: Response) => {
 /** GET /api/orders/:id — Get order status */
 router.get('/:id', (req: Request, res: Response) => {
   try {
-    const orderId = req.params['id'];
+    const orderId = str(req.params['id']) ?? '';
     const result = getOrderStatus(orderId);
 
     if (!result) {
@@ -103,7 +109,7 @@ router.get('/:id', (req: Request, res: Response) => {
 /** POST /api/orders/:id/ready — mark order ready (triggers push notification) */
 router.post('/:id/ready', async (req: Request, res: Response) => {
   try {
-    const orderId = req.params['id'];
+    const orderId = str(req.params['id']) ?? '';
     const order = await markOrderReady(orderId);
 
     if (!order) {
